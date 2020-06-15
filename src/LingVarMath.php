@@ -11,7 +11,15 @@ class LingVarMath
 
     public static function trapezoid($x, $a, $b, $c, $d)
     {
-        return max(min(($x-$a)/($b-$a),1,($d-$x)/($d-$c)),0);
+        if($a == INF || $b == INF) {
+            return max(min(1,($d-$x)/($d-$c)),0);
+        }
+        else if ($c == INF || $d == INF) {
+            return max(min(($x-$a)/($b-$a),1),0);
+        }
+        else {
+            return max(min(($x-$a)/($b-$a),1,($d-$x)/($d-$c)),0);
+        }
     } 
 
     protected function gaussian($x, $c, $o)

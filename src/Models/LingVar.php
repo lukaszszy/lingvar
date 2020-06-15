@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Exception;
 
-class LingVar extends Builder
+class LingVar
 {
     private $name;
     private $term;
@@ -26,7 +26,7 @@ class LingVar extends Builder
     }
 
     // Loads term definision file
-    protected function loadLingvarCollection()
+    private function loadLingvarCollection()
     {
         try {
             $file = env('FUZZY_LINGVAR_PATH').env('FUZZY_LINGVAR_FILENAME');
@@ -38,7 +38,7 @@ class LingVar extends Builder
     }
 
     // Finding function for selected variable term
-    protected function findFuzzyFunction($name, $term)
+    private function findFuzzyFunction($name, $term)
     {
         $function = self::loadLingvarCollection()->where('name', $name)
         ->flatten(2)->where('term', $term)
@@ -50,31 +50,19 @@ class LingVar extends Builder
 
         return $function;
     }
-    
-    // Adding degree column to collection
-    protected function addFuzzyDegreeValue($collection)
-    {
-        if ($collection->isEmpty()) { 
-            throw new Exception("Model is empty.");
-        }
 
-        $collection = $collection->map(function($state) {
-            $x = $state[$this->name];
-            $result = 'return Fuzzybuilder\Lingvar\LingVarMath::'.$this->function.';';
-            $result = str_replace('x', '$x', $result);
-            try {
-                if(!$this->negation) {
-                    $state['degree'] = eval($result);
-                }
-                else {
-                    $state['degree'] = 1-eval($result);
-                }
-            } catch (Exception $e) {
-                 throw new Exception("Can't execute the instruction with given function definition.");
-            }
-            return $state;
-        });
-        return $collection;
+    public function getFuzzyDegreeValue($x)
+    {
+        $result = 'return Fuzzybuilder\Lingvar\LingVarMath::'.$this->function.';';
+        $result = str_replace('x', '$x', $result);
+        if(!$this->negation)
+        {
+            return eval($result);
+        }
+        else
+        {
+            return 1-eval($result);
+        }
     }
 
     // Ordering collection
@@ -91,21 +79,6 @@ class LingVar extends Builder
         }
         
         return $collection;
-    }
-
-    // Retrun indexes of matching records
-    protected function getKeysArray($collection, $key)
-    {
-        $collection = self::addFuzzyDegreeValue($collection);
-        $collection = self::fuzzyOrder($collection);
-       // dd($collection);
-        $acceptedKeys = collect();
-        foreach ($collection as $row) {
-            if ($row['degree'] >= $this->minDegree) {
-                $acceptedKeys->push($row[$key]);
-            }
-        }
-        return $acceptedKeys;
     }
 
     protected function getName(){
@@ -128,7 +101,7 @@ class LingVar extends Builder
         return $this->function;
     }
 
-    protected function getNegation(){
+    public function getNegation(){
         return $this->negation;
     }
 

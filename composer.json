@@ -1,5 +1,5 @@
 {
-    "name": "lukaszszy/lingvar",
+    "name": "fuzzybuilder/lingvar",
     "description": "Fuzzy logic library for linguistic variables",
     "type": "library",
     "require": {
